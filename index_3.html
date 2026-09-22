@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>삐박 — 맨 땅에 헤딩으로 앱 개발중</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root {
+    --bg: #EDE6D3;
+    --surface: #F8F2E5;
+    --ink: #262019;
+    --muted: #6B5F4E;
+    --forest: #35503F;
+    --forest-soft: #4C6B57;
+    --brick: #A6432F;
+    --gold: #C69A2E;
+    --line: rgba(38,32,25,0.14);
+    --shadow: rgba(38,32,25,0.10);
+
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1A2018;
+      --surface: #212A1F;
+      --ink: #EDE6D3;
+      --muted: #B4AA96;
+      --forest: #8FB89C;
+      --forest-soft: #6E9A83;
+      --brick: #DE7C58;
+      --gold: #E4C15A;
+      --line: rgba(237,230,211,0.14);
+      --shadow: rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1A2018;
+    --surface: #212A1F;
+    --ink: #EDE6D3;
+    --muted: #B4AA96;
+    --forest: #8FB89C;
+    --forest-soft: #6E9A83;
+    --brick: #DE7C58;
+    --gold: #E4C15A;
+    --line: rgba(237,230,211,0.14);
+    --shadow: rgba(0,0,0,0.35);
+  }
+
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); scroll-behavior: smooth; }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Noto Serif KR', Georgia, 'Nanum Myeongjo', serif; margin: 0; font-weight: 600; }
+  a { color: inherit; }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+
+  header.top { padding: 22px 0 0; position: relative; z-index: 10; }
+  .top-inner { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+  .top-inner .mark { font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
+
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    font-size: 0.95rem;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  nav.tabs button {
+    background: none;
+    border: none;
+    padding: 6px 0;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+  }
+  nav.tabs button:hover { color: var(--forest); }
+  nav.tabs button.active { color: var(--forest); border-bottom-color: var(--forest); font-weight: 500; }
+  nav.tabs button.ramble { margin-left: 8px; padding-left: 14px; border-left: 1px solid var(--line); }
+
+  .auth-toggle {
+    background: none; border: 1px solid var(--line); border-radius: 3px;
+    padding: 6px 14px; cursor: pointer; color: var(--muted); font-size: 0.88rem;
+    font-family: inherit; flex-shrink: 0;
+  }
+  .auth-toggle:hover { color: var(--forest); border-color: var(--forest); }
+
+  .auth-panel {
+    display: none;
+    position: absolute;
+    top: 54px; right: 28px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 4px 18px var(--shadow);
+    padding: 16px;
+    width: 240px;
+    z-index: 20;
+  }
+  .auth-panel.open { display: block; }
+  .auth-panel input {
+    width: 100%; margin-bottom: 8px; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 3px;
+    background: var(--bg); color: var(--ink); font-family: inherit; font-size: 0.9rem;
+  }
+  .auth-panel .msg { font-size: 0.8rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+  .auth-status { display: none; font-size: 0.85rem; color: var(--forest-soft); align-items: center; gap: 8px; }
+  .auth-status.show { display: flex; }
+  .auth-status button { background: none; border: none; color: var(--brick); cursor: pointer; font-size: 0.85rem; font-family: inherit; text-decoration: underline; padding: 0; }
+
+  main { min-height: 60vh; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .hero { padding: 60px 0 76px; }
+  .hero h1 { font-size: clamp(2.1rem, 5vw, 3.1rem); line-height: 1.35; max-width: 14ch; }
+  .hero p.lede { margin-top: 26px; max-width: 46ch; font-size: 1.06rem; color: var(--ink); }
+  .hero p.lede + p.lede { margin-top: 14px; color: var(--muted); }
+
+  section.projects { padding: 8px 0 80px; position: relative; }
+  section.projects > h2 { font-size: 1.5rem; margin-bottom: 8px; }
+  section.projects > .sub { color: var(--muted); margin-bottom: 44px; max-width: 44ch; }
+
+  .route { position: relative; }
+  .route svg.path-line {
+    position: absolute; top: 34px; left: 0; width: 100%; height: calc(100% - 34px);
+    z-index: 0; pointer-events: none;
+  }
+  .route svg.path-line path { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 6 8; stroke-linecap: round; }
+  @media (prefers-reduced-motion: no-preference) {
+    .route svg.path-line path { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: draw 1.6s ease-out 0.2s forwards; }
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  .stop { position: relative; z-index: 1; display: grid; grid-template-columns: 68px 1fr; gap: 22px; margin-bottom: 40px; align-items: start; }
+  .stop:last-child { margin-bottom: 0; }
+  .stop .marker {
+    width: 68px; height: 68px; display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1.5px solid var(--line);
+  }
+  .stop .marker svg { width: 32px; height: 32px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 22px 24px; box-shadow: 0 2px 10px var(--shadow); }
+  .card .status { display: inline-block; font-size: 0.8rem; color: var(--forest-soft); margin-bottom: 8px; }
+  .card h3 { font-size: 1.22rem; margin-bottom: 8px; }
+  .card p { margin: 0 0 12px; color: var(--ink); }
+  .card .links { display: flex; gap: 14px; font-size: 0.92rem; flex-wrap: wrap; }
+  .card .links a { text-decoration: none; color: var(--brick); border-bottom: 1px solid transparent; }
+  .card .links a:hover { border-bottom-color: var(--brick); }
+  .card.paused { opacity: 0.82; }
+  .card.paused .status { color: var(--muted); }
+  .card.clickable { cursor: pointer; }
+  .card.clickable:hover { box-shadow: 0 4px 16px var(--shadow); }
+  .more-link { display: inline-block; margin-top: 4px; font-size: 0.88rem; color: var(--brick); }
+
+  .ramble-banner-wrap { padding: 0 0 80px; }
+  .ramble-banner {
+    background: var(--forest); color: var(--surface);
+    border-radius: 4px; padding: 30px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    cursor: pointer; box-shadow: 0 2px 10px var(--shadow);
+    flex-wrap: wrap;
+  }
+  .ramble-banner:hover { opacity: 0.9; }
+  .ramble-banner h2 { color: var(--surface); font-size: 1.6rem; }
+  .ramble-banner p { margin: 8px 0 0; color: var(--surface); opacity: 0.85; }
+  .ramble-banner .more-link { color: var(--surface); font-weight: 500; white-space: nowrap; }
+
+  /* Project detail panels */
+  .detail-head { padding: 56px 0 8px; }
+  .detail-head h2 { font-size: 1.9rem; }
+  .detail-head .status { display: inline-block; font-size: 0.85rem; color: var(--forest-soft); margin: 10px 0 14px; }
+  .detail-head p { max-width: 54ch; color: var(--ink); }
+  .detail-head .links { display: flex; gap: 16px; margin-top: 14px; font-size: 0.92rem; flex-wrap: wrap; }
+  .detail-head .links a { color: var(--brick); text-decoration: none; border-bottom: 1px solid transparent; }
+  .detail-head .links a:hover { border-bottom-color: var(--brick); }
+
+  section.feed-section { padding: 20px 0 90px; border-top: 1px solid var(--line); margin-top: 32px; }
+  section.feed-section h3 { font-size: 1.15rem; margin-bottom: 20px; }
+
+  .post-feed .empty { color: var(--muted); font-size: 0.94rem; }
+  .post {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+    padding: 18px 20px; margin-bottom: 16px;
+  }
+  .post h4 { font-size: 1.02rem; margin-bottom: 6px; }
+  .post .post-date { font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+  .post p { margin: 0; white-space: pre-wrap; }
+  .post img { max-width: 100%; border-radius: 3px; margin-top: 12px; display: block; }
+
+  .owner-only { display: none; }
+  .post-form, .gb-form {
+    margin-top: 24px; padding: 18px 20px; background: var(--surface);
+    border: 1px dashed var(--line); border-radius: 4px;
+  }
+  .post-form input[type="text"], .post-form textarea, .gb-form input, .gb-form textarea {
+    width: 100%; margin-bottom: 10px; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 3px; background: var(--bg);
+    color: var(--ink); font-family: inherit; font-size: 0.94rem; resize: vertical;
+  }
+  .post-form input[type="file"] { margin-bottom: 10px; font-size: 0.88rem; color: var(--muted); }
+  .form-msg { font-size: 0.82rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 3px;
+    text-decoration: none; font-size: 0.94rem; border: 1.5px solid var(--forest); color: var(--forest);
+    background: none; font-family: inherit; cursor: pointer;
+  }
+  .btn.solid { background: var(--forest); color: var(--surface); border-color: var(--forest); }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+
+  .guestbook { padding: 8px 0 90px; border-top: 1px solid var(--line); margin-top: 8px; }
+  .guestbook h2 { font-size: 1.5rem; margin: 56px 0 10px; }
+  .guestbook > p { color: var(--muted); max-width: 50ch; margin-bottom: 24px; }
+  .gb-feed .empty { color: var(--muted); font-size: 0.94rem; }
+  .gb-entry { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .gb-entry:last-child { border-bottom: none; }
+  .gb-entry .gb-name { font-weight: 600; font-size: 0.92rem; }
+  .gb-entry .gb-date { font-size: 0.76rem; color: var(--muted); margin-left: 8px; }
+  .gb-entry p { margin: 4px 0 0; white-space: pre-wrap; font-size: 0.94rem; }
+  .gb-form { border-style: solid; }
+  .gb-form .row { display: flex; gap: 10px; }
+  .gb-form .row input { flex: 1; }
+
+  section.contact { padding: 8px 0 90px; border-top: 1px solid var(--line); margin-top: 8px; }
+  section.contact h2 { font-size: 1.5rem; margin: 56px 0 16px; }
+  section.contact p { max-width: 52ch; color: var(--ink); }
+  section.contact p.small { color: var(--muted); font-size: 0.94rem; }
+  .contact-actions { display: flex; gap: 14px; margin-top: 26px; flex-wrap: wrap; }
+
+  .ramble-head { padding: 56px 0 8px; }
+  .ramble-head h2 { font-size: 1.7rem; }
+  .ramble-head p { color: var(--muted); max-width: 48ch; margin-top: 12px; }
+
+  footer { padding: 32px 0 40px; color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--line); }
+
+  @media (max-width: 640px) {
+    .top-inner { flex-wrap: wrap; }
+    nav.tabs { justify-content: flex-start; flex-basis: 100%; order: 3; margin-top: 6px; }
+    nav.tabs button.ramble { margin-left: 0; padding-left: 0; border-left: none; flex-basis: 100%; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+  }
+  @media (max-width: 560px) {
+    .hero { padding: 44px 0 56px; }
+    .stop { grid-template-columns: 52px 1fr; gap: 16px; }
+    .stop .marker { width: 52px; height: 52px; }
+    .stop .marker svg { width: 24px; height: 24px; }
+    .route svg.path-line { display: none; }
+    .auth-panel { right: 14px; width: calc(100% - 28px); }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <span class="mark">삐박</span>
+    <nav class="tabs" id="tabs">
+      <button data-tab="home">홈</button>
+    </nav>
+    <button class="auth-toggle" id="authToggle" title="관리자 로그인">로그인</button>
+  </div>
+  <div class="wrap" style="position:relative;">
+    <div class="auth-panel" id="authPanel">
+      <div id="loginBox">
+        <input type="email" id="loginEmail" placeholder="이메일" autocomplete="username">
+        <input type="password" id="loginPw" placeholder="비밀번호" autocomplete="current-password">
+        <button class="btn solid" id="loginBtn" style="width:100%;justify-content:center;">로그인</button>
+        <div class="msg" id="loginMsg"></div>
+      </div>
+      <div class="auth-status" id="authStatus">
+        <span>로그인됨</span>
+        <button id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="panel active" data-panel="home">
+  <div class="hero wrap">
+    <h1>맨 땅에 헤딩으로<br>앱 개발중입니다</h1>
+    <p class="lede">9살부터 스타리그를 보던 잼민이가 이제 게임을 만들기 시작했습니다. 상상속에만 있던게 실제로 튀어나오는게 신기하네요. AI 만만세.</p>
+    <p class="lede">여기는 제 개발자 페이지 겸 블로그가 될 계획입니다. 나중에는 소통 창구로도 쓰이면 좋을거 같네요.</p>
+  </div>
+
+  <section class="projects wrap">
+    <h2>작업 부산물들</h2>
+    <p class="sub">아래에 있을수록 배설한지 오래된 작업들입니다. 눌러보면 관련 글도 볼 수 있어요.</p>
+
+    <div class="route">
+      <svg class="path-line" viewBox="0 0 4 300" preserveAspectRatio="none">
+        <path d="M2,20 L2,280"/>
+      </svg>
+
+      <div class="stop">
+        <div class="marker">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+            <polygon points="16,3 27,11 23,24 9,24 5,11" style="color:var(--forest)"/>
+          </svg>
+        </div>
+        <div class="card clickable" data-open-tab="hexiamond">
+          <span class="status">웹에서 플레이 가능 · 안드로이드 출시 준비 중</span>
+          <h3>Hexiamond</h3>
+          <p>삼각형 기반으로 한 테트리스 비슷한거. 시간 떼우기 참 좋습니다. 비슷한 게임을 하다가 광고 제거 결제를 했는데, 기기를 바꾼 뒤 광고가 또 나와서 그냥 제가 만들어 버렸습니다.</p>
+          <span class="more-link">자세히 보기 →</span>
+        </div>
+      </div>
+
+      <div class="stop">
+        <div class="marker">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M16 4 L28 26 H4 Z" style="color:var(--brick)"/>
+          </svg>
+        </div>
+        <div class="card clickable" data-open-tab="wargame">
+          <span class="status">설계 중</span>
+          <h3>전쟁 전략 시뮬레이터(가제)</h3>
+          <p>카드게임과 턴제 전략이 만나는 역사 기반 게임입니다. 역사뽕 채우려고 시작했는데 설정 놀이 하는 재미가 있네요.</p>
+          <span class="more-link">자세히 보기 →</span>
+        </div>
+      </div>
+
+      <div class="stop">
+        <div class="marker">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M6 17 L16 8 L26 17 M9 15 V26 H23 V15" style="color:var(--gold)"/>
+          </svg>
+        </div>
+        <div class="card clickable paused" data-open-tab="todovillage">
+          <span class="status">예전에 만들었던 프로젝트</span>
+          <h3>투두 빌리지</h3>
+          <p>투두 리스트 앱과 저퀄리티 동물의 숲같은 컨셉입니다. 저는 투두 리스트 앱을 안 쓰긴 하지만요.</p>
+          <span class="more-link">자세히 보기 →</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap ramble-banner-wrap">
+    <div class="ramble-banner" data-open-tab="ramble">
+      <div>
+        <h2>뻘글</h2>
+        <p>개발이랑 상관없는 아무 얘기나 지껄이는 칸입니다.</p>
+      </div>
+      <span class="more-link">들어가기 →</span>
+    </div>
+  </section>
+
+  <section class="contact wrap" id="contact">
+    <h2>이야기하고 싶다면</h2>
+    <p>버그를 발견했거나, 게임에 대해 훈수를 두고싶거나, 그냥 안부를 전하고 싶다면 편하게 연락 주세요. 제가 롤을 오래 하긴 했지만 욕은 지양해주세요. 지금은 이메일이 가장 빠른 방법입니다.</p>
+    <div class="contact-actions">
+      <a class="btn solid" href="mailto:psjung524@naver.com">이메일 보내기</a>
+      <a class="btn" href="https://github.com/psjung52424-cmyk" target="_blank" rel="noopener">깃허브 방문하기</a>
+    </div>
+  </section>
+</section>
+
+<section class="panel" data-panel="hexiamond">
+  <div class="detail-head wrap">
+    <span class="status">웹에서 플레이 가능 · 안드로이드 출시 준비 중</span>
+    <h2>Hexiamond</h2>
+    <p>삼각형 기반으로 한 테트리스 비슷한거. 시간 떼우기 참 좋습니다. 비슷한 게임을 하다가 광고 제거 결제를 했는데, 기기를 바꾼 뒤 광고가 또 나와서 그냥 제가 만들어 버렸습니다. 이왕이면 앱으로 플레이해주세요.</p>
+    <div class="links">
+      <a href="https://psjung52424-cmyk.github.io/hexiamond/" target="_blank" rel="noopener">웹에서 플레이</a>
+      <a href="https://github.com/psjung52424-cmyk/hexiamond" target="_blank" rel="noopener">소스코드</a>
+    </div>
+  </div>
+  <section class="feed-section wrap">
+    <h3>업데이트 / 잡담</h3>
+    <div class="post-feed" data-category="hexiamond"><p class="empty">불러오는 중...</p></div>
+    <form class="post-form owner-only" data-category="hexiamond">
+      <input type="text" class="p-title" placeholder="제목 (선택)">
+      <textarea class="p-body" placeholder="무슨 일이 있었는지 적어주세요" rows="4" required></textarea>
+      <input type="file" class="p-file" accept="image/*">
+      <button type="submit" class="btn solid">올리기</button>
+      <div class="form-msg"></div>
+    </form>
+  </section>
+</section>
+
+<section class="panel" data-panel="wargame">
+  <div class="detail-head wrap">
+    <span class="status">설계 중</span>
+    <h2>전쟁 전략 시뮬레이터 (가제)</h2>
+    <p>카드게임과 턴제 전략이 만나는 역사 기반 게임입니다. 역사뽕 채우려고 시작했는데 설정 놀이 하는 재미가 있네요. 역사는 잘 몰라서 피드백 많이 주시면 감사하겠습니다.</p>
+    <div class="links"><span style="color:var(--muted)">아직 공개된 버전은 없습니다</span></div>
+  </div>
+  <section class="feed-section wrap">
+    <h3>업데이트 / 잡담</h3>
+    <div class="post-feed" data-category="wargame"><p class="empty">불러오는 중...</p></div>
+    <form class="post-form owner-only" data-category="wargame">
+      <input type="text" class="p-title" placeholder="제목 (선택)">
+      <textarea class="p-body" placeholder="무슨 일이 있었는지 적어주세요" rows="4" required></textarea>
+      <input type="file" class="p-file" accept="image/*">
+      <button type="submit" class="btn solid">올리기</button>
+      <div class="form-msg"></div>
+    </form>
+  </section>
+</section>
+
+<section class="panel" data-panel="todovillage">
+  <div class="detail-head wrap">
+    <span class="status">예전에 만들었던 프로젝트</span>
+    <h2>투두 빌리지</h2>
+    <p>투두 리스트 앱과 저퀄리티 동물의 숲같은 컨셉입니다. 저는 투두 리스트 앱을 안 쓰긴 하지만요.</p>
+  </div>
+  <section class="feed-section wrap">
+    <h3>업데이트 / 잡담</h3>
+    <div class="post-feed" data-category="todovillage"><p class="empty">불러오는 중...</p></div>
+    <form class="post-form owner-only" data-category="todovillage">
+      <input type="text" class="p-title" placeholder="제목 (선택)">
+      <textarea class="p-body" placeholder="무슨 일이 있었는지 적어주세요" rows="4" required></textarea>
+      <input type="file" class="p-file" accept="image/*">
+      <button type="submit" class="btn solid">올리기</button>
+      <div class="form-msg"></div>
+    </form>
+  </section>
+</section>
+
+<section class="panel" data-panel="ramble">
+  <div class="ramble-head wrap">
+    <h2>뻘글</h2>
+    <p>그냥 아무 얘기나 지껄이는 칸입니다. 개발이랑 관련 없어도 됩니다.</p>
+  </div>
+  <section class="feed-section wrap" style="border-top:none; margin-top:0;">
+    <div class="post-feed" data-category="ramble"><p class="empty">불러오는 중...</p></div>
+    <form class="post-form owner-only" data-category="ramble">
+      <textarea class="p-body" placeholder="아무 말이나 적어주세요" rows="4" required></textarea>
+      <input type="file" class="p-file" accept="image/*">
+      <button type="submit" class="btn solid">지껄이기</button>
+      <div class="form-msg"></div>
+    </form>
+  </section>
+</section>
+
+</main>
+
+<footer class="wrap">
+  삐박 - 게임 · 앱 배설중
+</footer>
+
+<script>
+(function () {
+  const SUPABASE_URL = 'https://fldfhskueyxohnhcvbjm.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_mnIEsDNFXeP7pnCe2ywfmQ_eMmiivqO';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const loadedTabs = new Set();
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }); }
+    catch (e) { return ''; }
+  }
+  function safeImageSrc(url) {
+    if (typeof url !== 'string') return null;
+    if (!url.startsWith(SUPABASE_URL + '/storage/')) return null;
+    return url;
+  }
+
+  /* ---------- Tabs ---------- */
+  function switchTab(tab) {
+    const panels = document.querySelectorAll('.panel');
+    const valid = Array.from(panels).some(p => p.dataset.panel === tab);
+    if (!valid) tab = 'home';
+    panels.forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    if (location.hash.slice(1) !== tab) history.replaceState(null, '', '#' + tab);
+    window.scrollTo(0, 0);
+    ensureTabLoaded(tab);
+  }
+  function ensureTabLoaded(tab) {
+    if (loadedTabs.has(tab)) return;
+    loadedTabs.add(tab);
+    if (tab === 'home') { return; }
+    const panel = document.querySelector(`.panel[data-panel="${tab}"]`);
+    const feed = panel && panel.querySelector('.post-feed');
+    if (feed) loadPosts(feed.dataset.category, feed);
+  }
+  document.getElementById('tabs').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-tab]');
+    if (btn) switchTab(btn.dataset.tab);
+  });
+  document.querySelectorAll('[data-open-tab]').forEach(el => {
+    el.addEventListener('click', () => switchTab(el.dataset.openTab));
+  });
+  window.addEventListener('hashchange', () => switchTab(location.hash.slice(1) || 'home'));
+
+  /* ---------- Auth ---------- */
+  const authToggle = document.getElementById('authToggle');
+  const authPanel = document.getElementById('authPanel');
+  const loginBox = document.getElementById('loginBox');
+  const authStatus = document.getElementById('authStatus');
+  const loginMsg = document.getElementById('loginMsg');
+  let session = null;
+
+  authToggle.addEventListener('click', () => authPanel.classList.toggle('open'));
+  document.addEventListener('click', e => {
+    if (!authPanel.contains(e.target) && e.target !== authToggle) authPanel.classList.remove('open');
+  });
+
+  function updateAuthUI() {
+    document.querySelectorAll('.owner-only').forEach(el => { el.style.display = session ? 'block' : 'none'; });
+    loginBox.style.display = session ? 'none' : 'block';
+    authStatus.classList.toggle('show', !!session);
+  }
+
+  sb.auth.getSession().then(({ data }) => { session = data.session; updateAuthUI(); });
+  sb.auth.onAuthStateChange((_e, s) => { session = s; updateAuthUI(); });
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPw').value;
+    if (!email || !password) { loginMsg.textContent = '이메일/비밀번호를 입력해주세요.'; return; }
+    loginMsg.textContent = '로그인 중...';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    loginMsg.textContent = error ? '로그인 실패: ' + error.message : '';
+  });
+  document.getElementById('logoutBtn').addEventListener('click', () => sb.auth.signOut());
+
+  /* ---------- Posts ---------- */
+  async function loadPosts(category, feedEl) {
+    feedEl.innerHTML = '<p class="empty">불러오는 중...</p>';
+    const { data, error } = await sb.from('posts').select('*').eq('category', category).order('created_at', { ascending: false });
+    if (error) { feedEl.innerHTML = '<p class="empty">불러오지 못했어요.</p>'; return; }
+    if (!data || !data.length) { feedEl.innerHTML = '<p class="empty">아직 글이 없어요.</p>'; return; }
+    feedEl.innerHTML = data.map(postHTML).join('');
+  }
+  function postHTML(p) {
+    const img = safeImageSrc(p.image_url);
+    return `<article class="post">
+      ${p.title ? `<h4>${escapeHTML(p.title)}</h4>` : ''}
+      <div class="post-date">${fmtDate(p.created_at)}</div>
+      <p>${escapeHTML(p.body)}</p>
+      ${img ? `<img src="${img}" alt="" loading="lazy">` : ''}
+    </article>`;
+  }
+
+  document.querySelectorAll('.post-form').forEach(form => {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const category = form.dataset.category;
+      const titleEl = form.querySelector('.p-title');
+      const bodyEl = form.querySelector('.p-body');
+      const fileEl = form.querySelector('.p-file');
+      const msgEl = form.querySelector('.form-msg');
+      const btn = form.querySelector('button[type="submit"]');
+      const body = bodyEl.value.trim();
+      if (!body) { msgEl.textContent = '내용을 적어주세요.'; return; }
+      btn.disabled = true;
+      msgEl.textContent = '올리는 중...';
+      try {
+        let image_url = null;
+        const file = fileEl.files[0];
+        if (file) {
+          const path = `${category}/${Date.now()}_${file.name}`.replace(/\s+/g, '_');
+          const { error: upErr } = await sb.storage.from('post-images').upload(path, file);
+          if (upErr) throw upErr;
+          const { data } = sb.storage.from('post-images').getPublicUrl(path);
+          image_url = data.publicUrl;
+        }
+        const { error } = await sb.from('posts').insert({
+          category, title: titleEl ? (titleEl.value.trim() || null) : null, body, image_url
+        });
+        if (error) throw error;
+        form.reset();
+        msgEl.textContent = '올렸어요.';
+        loadPosts(category, document.querySelector(`.post-feed[data-category="${category}"]`));
+      } catch (err) {
+        msgEl.textContent = '실패: ' + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  /* ---------- Guestbook ---------- */
+  /* ---------- Init ---------- */
+  switchTab(location.hash.slice(1) || 'home');
+})();
+</script>
+
+</body>
+</html>
