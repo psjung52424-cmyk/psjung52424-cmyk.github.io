@@ -253,6 +253,61 @@
 
   footer { padding: 32px 0 40px; color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--line); }
 
+
+  /* ---------- decorative faded imagery ---------- */
+  :root { --deco-opacity: 0.20; --deco-blur: 0.7px; }
+  .deco-hero {
+    position: absolute; top: 0; right: 0;
+    width: min(760px, 100%); height: 520px; z-index: 0;
+    pointer-events: none; color: var(--forest);
+    filter: blur(var(--deco-blur));
+    -webkit-mask-image: linear-gradient(to left, #000 35%, transparent 100%);
+            mask-image: linear-gradient(to left, #000 35%, transparent 100%);
+  }
+  .deco-hero .grid { stroke: currentColor; stroke-width: 1; fill: url(#hexgrid); opacity: 0.30; }
+  .deco-hero pattern path { fill: none; stroke: currentColor; stroke-width: 1; }
+  .deco-hero .pc-forest { fill: var(--forest); opacity: 0.30; }
+  .deco-hero .pc-brick  { fill: var(--brick);  opacity: 0.34; }
+  .deco-hero .pc-gold   { fill: var(--gold);   opacity: 0.42; }
+  .panel[data-panel="home"] { position: relative; overflow-x: clip; }
+  .panel[data-panel="home"] > :not(.deco-hero) { position: relative; z-index: 1; }
+
+  .deco {
+    position: absolute; pointer-events: none; z-index: 0;
+    opacity: var(--deco-opacity); filter: blur(var(--deco-blur));
+    --deco-ink: currentColor;
+  }
+  .ol { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .dash { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 3 4; stroke-linecap: round; }
+  .fl  { fill: currentColor; fill-opacity: 0.35; }
+  .fl2 { fill: var(--brick); fill-opacity: 0.55; }
+
+  .card { position: relative; overflow: hidden; }
+  .card > *:not(.deco) { position: relative; z-index: 1; }
+  .card .deco { right: -14px; bottom: -18px; width: 150px; height: 150px;
+    -webkit-mask-image: linear-gradient(to left, #000 30%, transparent 100%);
+            mask-image: linear-gradient(to left, #000 30%, transparent 100%); }
+  .deco-forest { color: var(--forest); }
+  .deco-brick  { color: var(--brick); }
+  .deco-gold   { color: var(--gold); }
+
+  .detail-head, .ramble-head { position: relative; }
+  .detail-head > *:not(.deco), .ramble-head > *:not(.deco) { position: relative; z-index: 1; }
+  .detail-head .deco, .ramble-head .deco { top: 18px; right: 0; width: 230px; height: 230px;
+    -webkit-mask-image: linear-gradient(to left, #000 25%, transparent 100%);
+            mask-image: linear-gradient(to left, #000 25%, transparent 100%); }
+
+  .ramble-banner { position: relative; overflow: hidden; }
+  .ramble-banner > *:not(.deco) { position: relative; z-index: 1; }
+  .ramble-banner .deco { right: 70px; top: -8px; width: 140px; height: 140px; color: var(--surface); opacity: 0.22; }
+
+  @media (max-width: 560px) {
+    .deco-hero { height: 360px; opacity: 0.85; }
+    .card .deco { width: 110px; height: 110px; }
+    .detail-head .deco, .ramble-head .deco { width: 130px; height: 130px; top: 40px; }
+    .ramble-banner .deco { right: 10px; }
+  }
+
   @media (max-width: 640px) {
     .top-inner { flex-wrap: wrap; }
     nav.tabs { justify-content: flex-start; flex-basis: 100%; order: 3; margin-top: 6px; }
@@ -269,6 +324,7 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="m-hex" viewBox="0 0 100 100"><polygon class="ol" points="90.00,50.00 70.00,84.64 30.00,84.64 10.00,50.00 30.00,15.36 70.00,15.36"/><line x1="50" y1="50" x2="90.00" y2="50.00"/><line x1="50" y1="50" x2="70.00" y2="84.64"/><line x1="50" y1="50" x2="30.00" y2="84.64"/><line x1="50" y1="50" x2="10.00" y2="50.00"/><line x1="50" y1="50" x2="30.00" y2="15.36"/><line x1="50" y1="50" x2="70.00" y2="15.36"/><polygon class="fl" points="50.00,50.00 90.00,50.00 70.00,84.64"/><polygon class="fl" points="50.00,50.00 70.00,84.64 30.00,84.64"/><polygon class="fl2" points="50.00,50.00 30.00,15.36 70.00,15.36"/></symbol><symbol id="m-war" viewBox="0 0 100 100"><path class="ol" d="M66.00 50.00 L58.00 63.86 L42.00 63.86 L34.00 50.00 L42.00 36.14 L58.00 36.14 Z"/><path class="ol" d="M90.00 63.86 L82.00 77.71 L66.00 77.71 L58.00 63.86 L66.00 50.00 L82.00 50.00 Z"/><path class="ol" d="M66.00 77.71 L58.00 91.57 L42.00 91.57 L34.00 77.71 L42.00 63.86 L58.00 63.86 Z"/><path class="ol" d="M42.00 63.86 L34.00 77.71 L18.00 77.71 L10.00 63.86 L18.00 50.00 L34.00 50.00 Z"/><path class="ol" d="M42.00 36.14 L34.00 50.00 L18.00 50.00 L10.00 36.14 L18.00 22.29 L34.00 22.29 Z"/><path class="ol" d="M66.00 22.29 L58.00 36.14 L42.00 36.14 L34.00 22.29 L42.00 8.43 L58.00 8.43 Z"/><path class="ol" d="M90.00 36.14 L82.00 50.00 L66.00 50.00 L58.00 36.14 L66.00 22.29 L82.00 22.29 Z"/><path class="dash" d="M26.0 63.9 L50.0 50.0 L74.0 36.1"/><line class="ol" x1="50" y1="50" x2="50" y2="34"/><polygon class="fl2" points="50,34 62,38.5 50,43"/><polygon class="fl" points="42.00,36.14 34.00,50.00 18.00,50.00 10.00,36.14 18.00,22.29 34.00,22.29"/></symbol><symbol id="m-village" viewBox="0 0 100 100"><line class="ol" x1="4" y1="80" x2="96" y2="80"/><path class="ol" d="M12 80 V58 L27.0 44 L42 58 V80"/><rect class="ol" x="24.0" y="70.1" width="6" height="9.9"/><path class="ol" d="M46 80 V64 L58.0 53 L70 64 V80"/><rect class="ol" x="55.0" y="72.8" width="6" height="7.2"/><path class="ol" d="M74 80 V68 L83.0 59 L92 68 V80"/><rect class="ol" x="80.0" y="74.6" width="6" height="5.4"/><circle class="fl" cx="40" cy="62" r="6"/><line class="ol" x1="40" y1="68" x2="40" y2="80"/><circle class="fl" cx="70" cy="66" r="5"/><line class="ol" x1="70" y1="71" x2="70" y2="80"/></symbol><symbol id="m-ramble" viewBox="0 0 100 100"><path class="ol" d="M14 22 H62 a8 8 0 0 1 8 8 V46 a8 8 0 0 1 -8 8 H34 L22 66 V54 H14 a8 8 0 0 1 -8 -8 V30 a8 8 0 0 1 8 -8 Z"/><circle class="fl" cx="24" cy="38" r="3"/><circle class="fl" cx="38" cy="38" r="3"/><circle class="fl" cx="52" cy="38" r="3"/><path class="ol" d="M58 62 H86 a7 7 0 0 1 7 7 V80 a7 7 0 0 1 -7 7 H80 V96 L70 87 H58 a7 7 0 0 1 -7 -7 V69 a7 7 0 0 1 7 -7 Z"/></symbol></defs></svg>
 
 <header class="top">
   <div class="wrap top-inner">
@@ -297,6 +353,21 @@
 <main>
 
 <section class="panel active" data-panel="home">
+  <svg class="deco-hero" viewBox="0 0 420 270" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">
+  <defs>
+    <pattern id="hexgrid" width="60.00" height="34.64" patternUnits="userSpaceOnUse"><path d="M20.00 0.00 L10.00 17.32 L-10.00 17.32 L-20.00 0.00 L-10.00 -17.32 L10.00 -17.32 Z"/><path d="M80.00 0.00 L70.00 17.32 L50.00 17.32 L40.00 0.00 L50.00 -17.32 L70.00 -17.32 Z"/><path d="M20.00 34.64 L10.00 51.96 L-10.00 51.96 L-20.00 34.64 L-10.00 17.32 L10.00 17.32 Z"/><path d="M80.00 34.64 L70.00 51.96 L50.00 51.96 L40.00 34.64 L50.00 17.32 L70.00 17.32 Z"/><path d="M50.00 17.32 L40.00 34.64 L20.00 34.64 L10.00 17.32 L20.00 0.00 L40.00 0.00 Z"/></pattern>
+    <linearGradient id="heroFade" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.55" stop-color="#fff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="heroMask"><rect width="420" height="270" fill="url(#heroFade)"/></mask>
+  </defs>
+  <g mask="url(#heroMask)">
+    <rect width="420" height="270" fill="url(#hexgrid)" class="grid"/>
+    <polygon class="pc-forest" points="230.00,121.24 220.00,138.56 200.00,138.56 190.00,121.24"/><polygon class="pc-brick" points="220.00,69.28 230.00,51.96 250.00,51.96 260.00,69.28"/><polygon class="pc-gold" points="270.00,155.88 290.00,155.88 280.00,173.21"/><polygon class="pc-forest" points="280.00,103.92 290.00,86.60 310.00,86.60 320.00,103.92"/><polygon class="pc-brick" points="330.00,51.96 310.00,51.96 320.00,34.64"/><polygon class="pc-gold" points="180.00,69.28 190.00,86.60 170.00,86.60"/><polygon class="pc-forest" points="360.00,138.56 370.00,121.24 380.00,138.56"/>
+  </g>
+</svg>
   <div class="hero wrap">
     <h1>맨 땅에 헤딩으로<br>앱 개발중입니다</h1>
     <p class="lede">9살부터 스타리그를 보던 잼민이가 이제 게임을 만들기 시작했습니다. 상상속에만 있던게 실제로 튀어나오는게 신기하네요. AI 만만세.</p>
@@ -319,6 +390,7 @@
           </svg>
         </div>
         <div class="card clickable" data-open-tab="hexiamond">
+          <svg class="deco deco-forest" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-hex"/></svg>
           <span class="status">웹에서 플레이 가능 · 안드로이드 출시 준비 중</span>
           <h3>Hexiamond</h3>
           <p>삼각형 기반으로 한 테트리스 비슷한거. 시간 떼우기 참 좋습니다. 비슷한 게임을 하다가 광고 제거 결제를 했는데, 기기를 바꾼 뒤 광고가 또 나와서 그냥 제가 만들어 버렸습니다.</p>
@@ -333,6 +405,7 @@
           </svg>
         </div>
         <div class="card clickable" data-open-tab="wargame">
+          <svg class="deco deco-brick" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-war"/></svg>
           <span class="status">3D 프로토타입 플레이 가능</span>
           <h3>전쟁 전략 시뮬레이터(가제)</h3>
           <p>카드게임과 턴제 전략이 만나는 역사 기반 게임입니다. 역사뽕 채우려고 시작했는데 설정 놀이 하는 재미가 있네요.</p>
@@ -347,6 +420,7 @@
           </svg>
         </div>
         <div class="card clickable paused" data-open-tab="todovillage">
+          <svg class="deco deco-gold" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-village"/></svg>
           <span class="status">예전에 만들었던 프로젝트</span>
           <h3>투두 빌리지</h3>
           <p>투두 리스트 앱과 저퀄리티 동물의 숲같은 컨셉입니다. 저는 투두 리스트 앱을 안 쓰긴 하지만요.</p>
@@ -358,9 +432,10 @@
 
   <section class="wrap ramble-banner-wrap">
     <div class="ramble-banner" data-open-tab="ramble">
+      <svg class="deco deco-forest" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-ramble"/></svg>
       <div>
         <h2>뻘글</h2>
-        <p>개발이랑 상관없는 아무 얘기나 지껄이는 칸입니다.</p>
+        <p>아무 얘기나 싸제끼는 곳입니다.</p>
       </div>
       <span class="more-link">들어가기 →</span>
     </div>
@@ -378,6 +453,7 @@
 
 <section class="panel" data-panel="hexiamond">
   <div class="detail-head wrap">
+    <svg class="deco deco-forest" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-hex"/></svg>
     <span class="status">웹에서 플레이 가능 · 안드로이드 출시 준비 중</span>
     <h2>Hexiamond</h2>
     <p>삼각형 기반으로 한 테트리스 비슷한거. 시간 떼우기 참 좋습니다. 비슷한 게임을 하다가 광고 제거 결제를 했는데, 기기를 바꾼 뒤 광고가 또 나와서 그냥 제가 만들어 버렸습니다. 이왕이면 앱으로 플레이해주세요.</p>
@@ -401,6 +477,7 @@
 
 <section class="panel" data-panel="wargame">
   <div class="detail-head wrap">
+    <svg class="deco deco-brick" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-war"/></svg>
     <span class="status">3D 프로토타입 플레이 가능</span>
     <h2>전쟁 전략 시뮬레이터 (가제)</h2>
     <p>카드게임과 턴제 전략이 만나는 역사 기반 게임입니다. 역사뽕 채우려고 시작했는데 설정 놀이 하는 재미가 있네요. 역사는 잘 몰라서 피드백 많이 주시면 감사하겠습니다.</p>
@@ -423,6 +500,7 @@
 
 <section class="panel" data-panel="todovillage">
   <div class="detail-head wrap">
+    <svg class="deco deco-gold" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-village"/></svg>
     <span class="status">예전에 만들었던 프로젝트</span>
     <h2>투두 빌리지</h2>
     <p>투두 리스트 앱과 저퀄리티 동물의 숲같은 컨셉입니다. 저는 투두 리스트 앱을 안 쓰긴 하지만요.</p>
@@ -442,8 +520,9 @@
 
 <section class="panel" data-panel="ramble">
   <div class="ramble-head wrap">
+    <svg class="deco deco-forest" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-ramble"/></svg>
     <h2>뻘글</h2>
-    <p>그냥 아무 얘기나 지껄이는 칸입니다. 개발이랑 관련 없어도 됩니다.</p>
+    <p>아무 얘기나 싸제끼는 곳입니다.</p>
   </div>
   <section class="feed-section wrap" style="border-top:none; margin-top:0;">
     <div class="post-feed" data-category="ramble"><p class="empty">불러오는 중...</p></div>
