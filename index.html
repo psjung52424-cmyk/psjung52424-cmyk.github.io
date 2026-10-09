@@ -308,6 +308,18 @@
     .ramble-banner .deco { right: 10px; }
   }
 
+
+  /* ---------- owner: delete button on posts ---------- */
+  .post { position: relative; }
+  .post-del {
+    display: none; position: absolute; top: 12px; right: 14px;
+    background: none; border: none; padding: 2px 4px; cursor: pointer;
+    font: inherit; font-size: 0.8rem; color: var(--brick); text-decoration: underline;
+  }
+  .is-owner .post-del { display: inline-block; }
+  .post-del:disabled { opacity: 0.4; cursor: default; }
+  .is-owner .post h4, .is-owner .post .post-date { padding-right: 44px; }
+
   @media (max-width: 640px) {
     .top-inner { flex-wrap: wrap; }
     nav.tabs { justify-content: flex-start; flex-basis: 100%; order: 3; margin-top: 6px; }
@@ -610,6 +622,7 @@
 
   function updateAuthUI() {
     document.querySelectorAll('.owner-only').forEach(el => { el.style.display = session ? 'block' : 'none'; });
+    document.body.classList.toggle('is-owner', !!session);
     loginBox.style.display = session ? 'none' : 'block';
     authStatus.classList.toggle('show', !!session);
     authToggle.textContent = session ? '로그아웃' : '로그인';
@@ -640,6 +653,7 @@
   function postHTML(p) {
     const img = safeImageSrc(p.image_url);
     return `<article class="post">
+      <button class="post-del" data-id="${escapeHTML(p.id)}" data-img="${img ? escapeHTML(img) : ''}">삭제</button>
       ${p.title ? `<h4>${escapeHTML(p.title)}</h4>` : ''}
       <div class="post-date">${fmtDate(p.created_at)}</div>
       <p>${escapeHTML(p.body)}</p>
@@ -683,6 +697,32 @@
         btn.disabled = false;
       }
     });
+  });
+
+  /* ---------- Delete a post (owner only; RLS enforces it server-side too) ---------- */
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.post-del');
+    if (!btn || !session) return;
+    if (!confirm('이 글을 삭제할까요? 되돌릴 수 없어요.')) return;
+    const feedEl = btn.closest('.post-feed');
+    const img = btn.dataset.img;
+    btn.disabled = true;
+    try {
+      const { data, error } = await sb.from('posts').delete().eq('id', btn.dataset.id).select();
+      if (error) throw error;
+      if (!data || !data.length) throw new Error('삭제되지 않았어요. 로그아웃 후 다시 로그인해보세요.');
+      if (img) {
+        try {
+          const marker = '/post-images/';
+          const i = img.indexOf(marker);
+          if (i !== -1) await sb.storage.from('post-images').remove([decodeURIComponent(img.slice(i + marker.length))]);
+        } catch (_) { /* 사진 정리 실패는 무시 */ }
+      }
+      loadPosts(feedEl.dataset.category, feedEl);
+    } catch (err) {
+      alert('삭제 실패: ' + err.message);
+      btn.disabled = false;
+    }
   });
 
   /* ---------- Guestbook ---------- */
