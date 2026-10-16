@@ -215,6 +215,25 @@
   .modal-card .pf-check input { width: auto; margin: 0; }
   .pf-actions { display: flex; gap: 12px; margin-top: 6px; }
 
+  /* ---- visitor comments ---- */
+  .comments { max-width: 1160px; margin: 0 auto; padding: 0 40px 96px; }
+  .comments h3 { display: inline-block; margin: 0 0 14px; padding: 0 10px; background: var(--orange); font-size: 32px; line-height: 1.4; }
+  .cm-note { margin: 0 0 24px; max-width: 720px; font-size: 14.5px; color: #5a4a3e; }
+  .comment-form { margin-bottom: 36px; padding: 24px; background: var(--butter); border: 3px solid var(--ink); border-radius: 16px; max-width: 760px; }
+  .cm-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .comment-form input[type="text"], .comment-form input[type="password"], .comment-form textarea {
+    display: block; width: 100%; margin-bottom: 12px; padding: 11px 14px; border: 3px solid var(--ink); border-radius: 12px;
+    background: var(--white); color: var(--ink); font: inherit; font-size: 16px; resize: vertical;
+  }
+  .cm-hp { position: absolute !important; left: -9999px; width: 1px !important; height: 1px !important; opacity: 0; }
+  .cm { position: relative; max-width: 760px; margin-bottom: 18px; padding: 16px 22px 18px; background: var(--white); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 5px 5px 0 var(--ink); }
+  .cm-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .cm-nick { font-weight: 700; font-size: 16px; }
+  .cm-date { font-size: 13px; color: #5a4a3e; }
+  .cm-body { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .cm-del { display: none; margin-left: auto; background: none; border: none; padding: 2px 4px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; color: var(--crimson); text-decoration: underline; }
+  .cm-del.haspw, .is-owner .cm-del { display: inline-block; }
+
   /* ---- responsive ---- */
   @media (max-width: 860px) {
     .hero-inner { grid-template-columns: 1fr; padding: 52px 28px 64px; }
@@ -223,7 +242,8 @@
     .ramble-banner h2 { font-size: 60px; }
   }
   @media (max-width: 640px) {
-    .top-inner, .projects, .ramble-wrap, .contact, .band-inner, .feed { padding-left: 20px; padding-right: 20px; }
+    .top-inner, .projects, .ramble-wrap, .contact, .band-inner, .feed, .comments { padding-left: 20px; padding-right: 20px; }
+    .cm-row { grid-template-columns: 1fr; }
     .top-inner { flex-wrap: wrap; }
     .auth-panel { right: 20px; width: calc(100% - 40px); }
     .projects { padding-top: 48px; padding-bottom: 48px; }
@@ -330,6 +350,21 @@
       <button type="submit" class="btn solid">올리기</button>
       <div class="form-msg"></div>
     </form>
+  </section>
+  <section class="comments" id="projectComments">
+    <h3>의견 남기기</h3>
+    <p class="cm-note">로그인 없이 누구나 남길 수 있어요. 닉네임과 내용은 모두에게 공개되고, 비밀번호는 내가 쓴 의견을 지울 때만 써요. 욕설·광고는 삭제될 수 있어요.</p>
+    <form class="comment-form" id="commentForm" autocomplete="off">
+      <div class="cm-row">
+        <input type="text" id="cmNick" placeholder="닉네임" maxlength="20" required>
+        <input type="password" id="cmPw" placeholder="비밀번호 (삭제용, 선택)" maxlength="40" autocomplete="new-password">
+      </div>
+      <input type="text" id="cmWebsite" class="cm-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <textarea id="cmBody" placeholder="이 작업물에 대한 의견을 남겨주세요" rows="4" maxlength="1000" required></textarea>
+      <button type="submit" class="btn solid" id="cmSubmit">남기기</button>
+      <div class="form-msg" id="cmMsg"></div>
+    </form>
+    <div id="commentList"><p class="empty">불러오는 중...</p></div>
   </section>
 </section>
 
@@ -662,6 +697,7 @@
     if (!p) {
       head.innerHTML = '<h2>찾을 수 없는 작업물이에요</h2><p><a href="#home">홈으로 돌아가기</a></p>';
       section.hidden = true;
+      document.getElementById('projectComments').hidden = true;
       return;
     }
     section.hidden = false;
@@ -669,6 +705,7 @@
     feed.dataset.category = p.category;
     form.dataset.category = p.category;
     loadPosts(p.category, feed);
+    loadComments(p.category);
   }
 
   /* add / edit form (modal) */
@@ -775,6 +812,83 @@
     if (edit) { const p = projects.find(x => x.category === edit.dataset.cat); if (p && session) openProjectForm(p); return; }
     const del = e.target.closest('.proj-del');
     if (del) deleteProject(del.dataset.cat);
+  });
+
+  /* ---------- Visitor comments (no login needed) ---------- */
+  const cmSection = document.getElementById('projectComments');
+  const cmList = document.getElementById('commentList');
+  const cmForm = document.getElementById('commentForm');
+  const cmMsg = document.getElementById('cmMsg');
+  let commentsCat = null;
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 저장소를 못 쓰는 환경은 무시 */ } }
+  function commentHTML(c) {
+    return `<article class="cm">
+      <div class="cm-head"><span class="cm-nick">${escapeHTML(c.nickname)}</span><span class="cm-date">${fmtDate(c.created_at)}</span>
+        <button type="button" class="cm-del${c.has_pw ? ' haspw' : ''}" data-id="${escapeHTML(c.id)}">삭제</button></div>
+      <p class="cm-body">${escapeHTML(c.body)}</p>
+    </article>`;
+  }
+  async function loadComments(cat) {
+    commentsCat = cat;
+    cmSection.hidden = false;
+    cmList.innerHTML = '<p class="empty">불러오는 중...</p>';
+    const { data, error } = await sb.from('comments').select('id,nickname,body,has_pw,created_at')
+      .eq('project_category', cat).order('created_at', { ascending: false }).limit(100);
+    if (commentsCat !== cat) return;
+    if (error) {
+      if (error.code === 'PGRST205' || error.code === '42P01') { cmSection.hidden = true; return; } // 아직 테이블이 없으면 칸을 숨김
+      cmList.innerHTML = '<p class="empty">의견을 불러오지 못했어요.</p>';
+      return;
+    }
+    cmList.innerHTML = (data && data.length) ? data.map(commentHTML).join('') : '<p class="empty">아직 의견이 없어요. 첫 의견을 남겨주세요.</p>';
+  }
+  const savedNick = lsGet('ppak_nick');
+  if (savedNick) document.getElementById('cmNick').value = savedNick;
+
+  cmForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (document.getElementById('cmWebsite').value) return; // 숨은 칸이 채워지면 자동 입력으로 보고 무시
+    const nick = document.getElementById('cmNick').value.trim();
+    const body = document.getElementById('cmBody').value.trim();
+    const pw = document.getElementById('cmPw').value;
+    if (!nick || !body) { cmMsg.textContent = '닉네임과 내용을 적어주세요.'; return; }
+    if (pw && pw.length < 4) { cmMsg.textContent = '비밀번호는 4자 이상으로 적어주세요.'; return; }
+    const last = Number(lsGet('ppak_cm_last') || 0);
+    if (Date.now() - last < 20000) { cmMsg.textContent = '조금 뒤에 다시 남겨주세요. (20초에 한 번만 가능해요)'; return; }
+    const btn = document.getElementById('cmSubmit');
+    btn.disabled = true; cmMsg.textContent = '남기는 중...';
+    const { error } = await sb.rpc('add_comment', { p_category: commentsCat, p_nick: nick, p_body: body, p_pw: pw || null });
+    btn.disabled = false;
+    if (error) { cmMsg.textContent = '실패: ' + error.message; return; }
+    lsSet('ppak_nick', nick); lsSet('ppak_cm_last', String(Date.now()));
+    document.getElementById('cmBody').value = ''; document.getElementById('cmPw').value = '';
+    cmMsg.textContent = '남겼어요.';
+    loadComments(commentsCat);
+  });
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.cm-del');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    try {
+      if (session) {
+        if (!confirm('이 의견을 삭제할까요?')) return;
+        const { data, error } = await sb.from('comments').delete().eq('id', id).select('id');
+        if (error) throw error;
+        if (!data || !data.length) throw new Error('삭제되지 않았어요. 다시 로그인해보세요.');
+      } else {
+        const pw = prompt('남길 때 정한 비밀번호를 입력하세요.');
+        if (!pw) return;
+        const { data, error } = await sb.rpc('delete_comment', { p_id: id, p_pw: pw });
+        if (error) throw error;
+        if (!data) { alert('비밀번호가 맞지 않아요.'); return; }
+      }
+      loadComments(commentsCat);
+    } catch (err) {
+      alert('삭제 실패: ' + err.message);
+    }
   });
 
   /* ---------- Init ---------- */
