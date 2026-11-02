@@ -80,7 +80,7 @@
   }
   .pill.solid { background: var(--ink); color: var(--white); }
   .chip {
-    display: inline-block; background: var(--white); border: 2px solid var(--ink); border-radius: 999px;
+    display: inline-block; background: var(--white); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px;
     padding: 2px 14px; font-size: 13px; font-weight: 700; line-height: 1.6;
   }
 
@@ -100,6 +100,19 @@
 
   /* ---- projects ---- */
   .projects { max-width: 1160px; margin: 0 auto; padding: 72px 40px 72px; }
+  /* 작업물 섹션 뒤 모눈 격자 (화면 끝까지, 위아래는 흐리게 사라짐) */
+  .projects { position: relative; isolation: isolate; }
+  .projects::before {
+    content: ''; position: absolute; top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw); z-index: -1;
+    background-color: #FFFBEE;
+    background-image: linear-gradient(rgba(26, 15, 10, 0.09) 2px, transparent 2px),
+                      linear-gradient(90deg, rgba(26, 15, 10, 0.09) 2px, transparent 2px);
+    background-size: 36px 36px; background-position: center top;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 120px, #000 calc(100% - 120px), transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 120px, #000 calc(100% - 120px), transparent 100%);
+    pointer-events: none;
+  }
+  .panel { overflow-x: clip; }
   .hl-title { display: inline-block; margin: 0 0 12px; padding: 0 12px; background: var(--amber); font-size: 46px; line-height: 1.3; }
   .projects .sub { margin: 0 0 44px; font-size: 17px; }
   #projectList { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 36px; align-items: start; }
@@ -111,6 +124,8 @@
   .pcard.tone-orange { background: var(--orange); }
   .pcard.tone-white { background: var(--white); transform: rotate(1deg); }
   .pcard.tone-white .chip { background: var(--amber); }
+  .pcard.tone-crimson { background: var(--crimson); color: var(--white); transform: rotate(-0.6deg); }
+  .pcard.tone-crimson .more-pill { box-shadow: 4px 4px 0 var(--ink); }
   .pcard.paused { opacity: 0.86; }
   .pcard-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
   .pcard-icon { width: 34px; height: 34px; flex-shrink: 0; }
@@ -249,7 +264,7 @@
     .projects { padding-top: 48px; padding-bottom: 48px; }
     .hl-title { font-size: 36px; }
     #projectList { grid-template-columns: 1fr; gap: 28px; }
-    .pcard.tone-gold, .pcard.tone-white { transform: none; }
+    .pcard.tone-gold, .pcard.tone-white, .pcard.tone-crimson { transform: none; }
     .pcard { box-shadow: 6px 6px 0 var(--ink); }
     .ramble-banner { padding: 28px 24px; box-shadow: 6px 6px 0 var(--ink); }
     .ramble-banner h2 { font-size: 52px; }
@@ -603,7 +618,28 @@
     village: { label: '마을',       color: 'gold',   symbol: 'm-village', marker: '<path d="M6 17 L16 8 L26 17 M9 15 V26 H23 V15"/>' },
     star:    { label: '별',         color: 'forest', symbol: 'm-star',    marker: '<polygon points="16,3 19.5,12 29,12.5 21.5,18.5 24,28 16,22.5 8,28 10.5,18.5 3,12.5 12.5,12"/>' },
     pad:     { label: '게임패드',   color: 'brick',  symbol: 'm-pad',     marker: '<rect x="3" y="9" width="26" height="14" rx="7"/><path d="M10 13 V19 M7 16 H13"/><circle cx="21" cy="14.5" r="1.4"/><circle cx="24.5" cy="17.5" r="1.4"/>' },
-    bolt:    { label: '번개',       color: 'gold',   symbol: 'm-bolt',    marker: '<path d="M18 3 L7 18 H15 L13 29 L25 13 H17 Z"/>' }
+    bolt:    { label: '번개',       color: 'gold',   symbol: 'm-bolt',    marker: '<path d="M18 3 L7 18 H15 L13 29 L25 13 H17 Z"/>' },
+    diamond: { label: '다이아',     marker: '<path d="M16 3 L28 16 L16 29 L4 16 Z"/>' },
+    heart:   { label: '하트',       marker: '<path d="M16 27 C6 20 3 14 6 9 C9 5 14 6 16 10 C18 6 23 5 26 9 C29 14 26 20 16 27 Z"/>' },
+    moon:    { label: '달',         marker: '<path d="M21 4 A12 12 0 1 0 28 21 A9.5 9.5 0 1 1 21 4 Z"/>' },
+    flame:   { label: '불꽃',       marker: '<path d="M16 3 C18 9 25 12 25 20 A9 9 0 0 1 7 20 C7 15 10 12 12 9 C13 13 15 14 16 14 C16 10 15 7 16 3 Z"/>' },
+    crown:   { label: '왕관',       marker: '<path d="M4 10 L10 17 L16 6 L22 17 L28 10 L26 25 H6 Z"/>' },
+    sword:   { label: '검',         marker: '<path d="M26 4 L27.5 4.5 L28 6 L13 21 L11 19 Z M8 17 L15 24 M10.5 21.5 L5 27"/>' },
+    shield:  { label: '방패',       marker: '<path d="M16 3 L27 7 V15 C27 22 22 26 16 29 C10 26 5 22 5 15 V7 Z"/>' },
+    book:    { label: '책',         marker: '<path d="M16 8 C12 5 7 5 4 6 V26 C7 25 12 25 16 28 C20 25 25 25 28 26 V6 C25 5 20 5 16 8 Z M16 8 V28"/>' },
+    search:  { label: '돋보기',     marker: '<circle cx="13" cy="13" r="8.5"/><path d="M19.5 19.5 L28 28"/>' },
+    dice:    { label: '주사위',     marker: '<rect x="4" y="4" width="24" height="24" rx="5"/><circle cx="11" cy="11" r="1.6"/><circle cx="21" cy="21" r="1.6"/><circle cx="16" cy="16" r="1.6"/>' },
+    puzzle:  { label: '퍼즐',       marker: '<path d="M5 9 H12 A3.5 3.5 0 1 1 19 9 H26 V16 A3.5 3.5 0 1 0 26 23 V27 H5 Z"/>' },
+    rocket:  { label: '로켓',       marker: '<path d="M16 3 C22 8 23 15 21 22 H11 C9 15 10 8 16 3 Z M11 22 L7 27 L12 25 M21 22 L25 27 L20 25"/><circle cx="16" cy="12" r="2.5"/>' },
+    leaf:    { label: '나뭇잎',     marker: '<path d="M5 27 C5 13 13 5 27 5 C27 19 19 27 5 27 Z M5 27 L18 14"/>' },
+    music:   { label: '음표',       marker: '<path d="M12 24 V6 L26 3 V21"/><circle cx="8.5" cy="24" r="3.5"/><circle cx="22.5" cy="21" r="3.5"/>' },
+    flag:    { label: '깃발',       marker: '<path d="M7 29 V4 M7 5 H25 L21 11 L25 17 H7"/>' },
+    ghost:   { label: '유령',       marker: '<path d="M6 28 V14 A10 10 0 0 1 26 14 V28 L22 25 L19 28 L16 25 L13 28 L10 25 Z"/><circle cx="12.5" cy="14" r="1.4"/><circle cx="19.5" cy="14" r="1.4"/>' },
+    planet:  { label: '행성',       marker: '<circle cx="16" cy="16" r="7.5"/><path d="M8.5 13.5 C2 17 2 21 6 21.5 C10 22 20 19 26 14 C30 10 29 8 23.5 10"/>' },
+    chat:    { label: '말풍선',     marker: '<path d="M5 6 H27 V21 H14 L8 27 V21 H5 Z"/>' },
+    clock:   { label: '시계',       marker: '<circle cx="16" cy="16" r="12"/><path d="M16 9 V16 L21 19"/>' },
+    camera:  { label: '카메라',     marker: '<path d="M4 10 H10 L12 6 H20 L22 10 H28 V26 H4 Z"/><circle cx="16" cy="17" r="5"/>' },
+    phoenix: { label: '불사조',     marker: '<path d="M16 6 L19 10 L16 13 L13 10 Z M16 13 V26 M16 15 C11 11 7 11 3 13 C7 15 10 17 16 19 C22 17 25 15 29 13 C25 11 21 11 16 15 Z M13 26 L16 29 L19 26"/>' }
   };
   const DEFAULT_PROJECTS = [
     { id: null, category: 'hexiamond', sort_order: 10, icon: 'hex', dimmed: false,
@@ -642,11 +678,23 @@
     const c = escapeHTML(p.category);
     return `<div class="${cls}"><button type="button" class="proj-edit" data-cat="${c}">수정</button><button type="button" class="proj-del" data-cat="${c}">삭제</button></div>`;
   }
-  const CARD_TONES = ['tone-gold', 'tone-orange', 'tone-white'];
+  const CARD_TONES = ['tone-white', 'tone-gold', 'tone-orange', 'tone-crimson'];
+  // 새로고침할 때마다 색을 무작위로 섞되, 네 가지 색이 고르게 나오고 바로 옆 카드와는 겹치지 않게 배정
+  function randomTones(n) {
+    const out = [];
+    while (out.length < n) {
+      const bag = CARD_TONES.slice();
+      for (let k = bag.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [bag[k], bag[j]] = [bag[j], bag[k]]; }
+      if (out.length && bag[0] === out[out.length - 1]) bag.push(bag.shift());
+      out.push(...bag);
+    }
+    return out.slice(0, n);
+  }
+  let toneList = [];
   function cardHTML(p, i) {
     const ic = iconOf(p);
     const href = '#p/' + encodeURIComponent(p.category);
-    return `<div class="pcard ${CARD_TONES[i % 3]}${p.dimmed ? ' paused' : ''}" data-cat="${escapeHTML(p.category)}">
+    return `<div class="pcard ${toneList[i] || CARD_TONES[i % 4]}${p.dimmed ? ' paused' : ''}" data-cat="${escapeHTML(p.category)}">
         <div class="pcard-top">
           ${p.status ? `<span class="chip">${escapeHTML(p.status)}</span>` : '<span></span>'}
           <svg class="pcard-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ic.marker}</svg>
@@ -659,6 +707,7 @@
   }
   function renderProjectList() {
     const el = document.getElementById('projectList');
+    if (toneList.length !== projects.length) toneList = randomTones(projects.length);
     el.innerHTML = projects.length ? projects.map(cardHTML).join('') : '<p class="empty">아직 작업물이 없어요.</p>';
     document.getElementById('projNotice').classList.toggle('show', projectsMode !== 'db');
     document.getElementById('projAddBtn').disabled = projectsMode !== 'db';
